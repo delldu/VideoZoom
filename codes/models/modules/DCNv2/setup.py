@@ -39,7 +39,9 @@ def get_extensions():
             "-D__CUDA_NO_HALF2_OPERATORS__",
         ]
     else:
-        raise NotImplementedError('Cuda is not availabel')
+        #raise NotImplementedError('Cuda is not available')
+        pass
+    
 
     sources = [os.path.join(extensions_dir, s) for s in sources]
     include_dirs = [extensions_dir]
@@ -54,17 +56,13 @@ def get_extensions():
     ]
     return ext_modules
 
-
 setup(
     name="DCNv2",
     version="0.1",
     author="charlesshang",
     url="https://github.com/charlesshang/DCNv2",
     description="deformable convolutional networks",
-    packages=find_packages(exclude=(
-        "configs",
-        "tests",
-    )),
+    packages=find_packages(exclude=("configs", "tests",)),
     # install_requires=requirements,
     ext_modules=get_extensions(),
     cmdclass={"build_ext": torch.utils.cpp_extension.BuildExtension},
