@@ -20,7 +20,7 @@ parser.add_argument("--ffmpeg_dir", type=str, default="", help='path to ffmpeg.e
 parser.add_argument("--video", type=str, required=True, help='path of video to be converted')
 parser.add_argument("--model", type=str, required=True, help='path of pretrained model')
 parser.add_argument("--fps", type=float, default=24, help='specify fps of output video. Default: 24.')
-parser.add_argument("--N_out", type=int, default=7, help='Specify size of output frames of the network for faster conversion. This will depend on your cpu/gpu memory. Default: 7')
+parser.add_argument("--N_out", type=int, default=5, help='Specify size of output frames of the network for faster conversion. This will depend on your cpu/gpu memory. Default: 7')
 parser.add_argument("--output", type=str, default="output.mp4", help='Specify output file name. Default: output.mp4')
 args = parser.parse_args()
 
