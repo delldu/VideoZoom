@@ -9,6 +9,7 @@ try:
     from models.modules.DCNv2.dcn_v2 import DCN_sep
 except ImportError:
     raise ImportError('Failed to import DCNv2 module.')
+import pdb
 
 class PCD_Align(nn.Module):
     ''' Alignment module using Pyramid, Cascading and Deformable convolution
@@ -159,6 +160,7 @@ class Easy_PCD(nn.Module):
         return fusion_fea
 
 class DeformableConvLSTM(ConvLSTM):
+    # xxxx --->
     def __init__(self, input_size, input_dim, hidden_dim, kernel_size, num_layers, front_RBs, groups,
                  batch_first=False, bias=True, return_all_layers=False):
         ConvLSTM.__init__(self, input_size, input_dim, hidden_dim, kernel_size, num_layers, 
@@ -181,6 +183,126 @@ class DeformableConvLSTM(ConvLSTM):
 
         #### activation function
         self.lrelu = nn.LeakyReLU(negative_slope=0.1, inplace=True)
+        # pdb.set_trace()
+        # (Pdb) a
+        # input_size = (48, 48)
+        # input_dim = 64
+        # hidden_dim = [64]
+        # kernel_size = (3, 3)
+        # num_layers = 1
+        # front_RBs = 5
+        # groups = 8
+        # batch_first = True
+        # bias = True
+        # return_all_layers = False
+
+        # self = DeformableConvLSTM(
+        #   (cell_list): ModuleList(
+        #     (0): ConvLSTMCell(
+        #       (conv): Conv2d(128, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #     )
+        #   )
+        #   (pcd_h): Easy_PCD(
+        #     (fea_L2_conv1): Conv2d(64, 64, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))
+        #     (fea_L2_conv2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #     (fea_L3_conv1): Conv2d(64, 64, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))
+        #     (fea_L3_conv2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #     (pcd_align): PCD_Align(
+        #       (L3_offset_conv1_1): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       (L3_offset_conv2_1): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       (L3_dcnpack_1): DCN_sep(
+        #         (conv_offset_mask): Conv2d(64, 216, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       )
+        #       (L2_offset_conv1_1): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       (L2_offset_conv2_1): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       (L2_offset_conv3_1): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       (L2_dcnpack_1): DCN_sep(
+        #         (conv_offset_mask): Conv2d(64, 216, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       )
+        #       (L2_fea_conv_1): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       (L1_offset_conv1_1): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       (L1_offset_conv2_1): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       (L1_offset_conv3_1): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       (L1_dcnpack_1): DCN_sep(
+        #         (conv_offset_mask): Conv2d(64, 216, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       )
+        #       (L1_fea_conv_1): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       (L3_offset_conv1_2): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       (L3_offset_conv2_2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       (L3_dcnpack_2): DCN_sep(
+        #         (conv_offset_mask): Conv2d(64, 216, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       )
+        #       (L2_offset_conv1_2): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       (L2_offset_conv2_2): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       (L2_offset_conv3_2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       (L2_dcnpack_2): DCN_sep(
+        #         (conv_offset_mask): Conv2d(64, 216, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       )
+        #       (L2_fea_conv_2): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       (L1_offset_conv1_2): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       (L1_offset_conv2_2): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       (L1_offset_conv3_2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       (L1_dcnpack_2): DCN_sep(
+        #         (conv_offset_mask): Conv2d(64, 216, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       )
+        #       (L1_fea_conv_2): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       (lrelu): LeakyReLU(negative_slope=0.1, inplace=True)
+        #     )
+        #     (fusion): Conv2d(128, 64, kernel_size=(1, 1), stride=(1, 1))
+        #     (lrelu): LeakyReLU(negative_slope=0.1, inplace=True)
+        #   )
+        #   (pcd_c): Easy_PCD(
+        #     (fea_L2_conv1): Conv2d(64, 64, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))
+        #     (fea_L2_conv2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #     (fea_L3_conv1): Conv2d(64, 64, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))
+        #     (fea_L3_conv2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #     (pcd_align): PCD_Align(
+        #       (L3_offset_conv1_1): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       (L3_offset_conv2_1): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       (L3_dcnpack_1): DCN_sep(
+        #         (conv_offset_mask): Conv2d(64, 216, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       )
+        #       (L2_offset_conv1_1): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       (L2_offset_conv2_1): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       (L2_offset_conv3_1): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       (L2_dcnpack_1): DCN_sep(
+        #         (conv_offset_mask): Conv2d(64, 216, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       )
+        #       (L2_fea_conv_1): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       (L1_offset_conv1_1): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       (L1_offset_conv2_1): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       (L1_offset_conv3_1): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       (L1_dcnpack_1): DCN_sep(
+        #         (conv_offset_mask): Conv2d(64, 216, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       )
+        #       (L1_fea_conv_1): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       (L3_offset_conv1_2): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       (L3_offset_conv2_2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       (L3_dcnpack_2): DCN_sep(
+        #         (conv_offset_mask): Conv2d(64, 216, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       )
+        #       (L2_offset_conv1_2): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       (L2_offset_conv2_2): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       (L2_offset_conv3_2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       (L2_dcnpack_2): DCN_sep(
+        #         (conv_offset_mask): Conv2d(64, 216, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       )
+        #       (L2_fea_conv_2): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       (L1_offset_conv1_2): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       (L1_offset_conv2_2): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       (L1_offset_conv3_2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       (L1_dcnpack_2): DCN_sep(
+        #         (conv_offset_mask): Conv2d(64, 216, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       )
+        #       (L1_fea_conv_2): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #       (lrelu): LeakyReLU(negative_slope=0.1, inplace=True)
+        #     )
+        #     (fusion): Conv2d(128, 64, kernel_size=(1, 1), stride=(1, 1))
+        #     (lrelu): LeakyReLU(negative_slope=0.1, inplace=True)
+        #   )
+        #   (lrelu): LeakyReLU(negative_slope=0.1, inplace=True)
+        # )
+
 
     def forward(self, input_tensor, hidden_state = None):
         '''        
@@ -203,7 +325,7 @@ class DeformableConvLSTM(ConvLSTM):
             raise NotImplementedError()
         else:
             tensor_size = (input_tensor.size(3),input_tensor.size(4))
-            hidden_state = self._init_hidden(batch_size=input_tensor.size(0),tensor_size=tensor_size)
+            hidden_state = self._init_hidden(batch_size=input_tensor.size(0),tensor_size=tensor_size,iscuda=input_tensor.is_cuda)
         
         layer_output_list = []
         last_state_list = []
@@ -234,8 +356,8 @@ class DeformableConvLSTM(ConvLSTM):
 
         return layer_output_list, last_state_list
     
-    def _init_hidden(self, batch_size, tensor_size):
-        return super()._init_hidden(batch_size, tensor_size)
+    def _init_hidden(self, batch_size, tensor_size, iscuda=True):
+        return super()._init_hidden(batch_size, tensor_size, iscuda)
 
 class BiDeformableConvLSTM(nn.Module):
     def __init__(self, input_size, input_dim, hidden_dim, kernel_size, num_layers, front_RBs, groups,
@@ -245,6 +367,7 @@ class BiDeformableConvLSTM(nn.Module):
                                            kernel_size=kernel_size, num_layers=num_layers, front_RBs=front_RBs,
                                            groups=groups, batch_first=batch_first, bias=bias, return_all_layers=return_all_layers)
         self.conv_1x1 = nn.Conv2d(2*input_dim, input_dim, 1, 1, bias=True)
+        # pdb.set_trace()
 
     def forward(self, x):
         reversed_idx = list(reversed(range(x.shape[1])))
@@ -293,6 +416,8 @@ class LunaTokis(nn.Module):
 
         #### activation function
         self.lrelu = nn.LeakyReLU(negative_slope=0.1, inplace=True)
+
+        # pdb.set_trace()
 
     def forward(self, x):
         B, N, C, H, W = x.size()  # N input video frames

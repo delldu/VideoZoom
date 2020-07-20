@@ -1,7 +1,7 @@
 import torch.nn as nn
 from torch.autograd import Variable
 import torch
-
+import pdb
 
 class ConvLSTMCell(nn.Module):
 
@@ -38,6 +38,16 @@ class ConvLSTMCell(nn.Module):
                               kernel_size=self.kernel_size,
                               padding=self.padding,
                               bias=self.bias)
+        # pdb.set_trace()
+        # self = ConvLSTMCell(
+        #   (conv): Conv2d(128, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        # )
+        # input_size = (48, 48)
+        # input_dim = 64
+        # hidden_dim = 64
+        # kernel_size = (3, 3)
+        # bias = True
+
 
     def forward(self, input_tensor, cur_state):
         
@@ -57,11 +67,14 @@ class ConvLSTMCell(nn.Module):
         
         return h_next, c_next
 
-    def init_hidden(self, batch_size, tensor_size):
+    def init_hidden(self, batch_size, tensor_size, iscuda=True):
         height, width = tensor_size
-        return (Variable(torch.zeros(batch_size, self.hidden_dim, height, width)).cuda(),
-                Variable(torch.zeros(batch_size, self.hidden_dim, height, width)).cuda())
-
+        if (iscuda):
+            return (torch.zeros(batch_size, self.hidden_dim, height, width).cuda(),
+                torch.zeros(batch_size, self.hidden_dim, height, width).cuda())
+        else:
+            return (torch.zeros(batch_size, self.hidden_dim, height, width),
+                torch.zeros(batch_size, self.hidden_dim, height, width))
 
 class ConvLSTM(nn.Module):
 
@@ -122,7 +135,7 @@ class ConvLSTM(nn.Module):
             raise NotImplementedError()
         else:
             tensor_size = (input_tensor.size(3),input_tensor.size(4))
-            hidden_state = self._init_hidden(batch_size=input_tensor.size(0),tensor_size=tensor_size)
+            hidden_state = self._init_hidden(batch_size=input_tensor.size(0),tensor_size=tensor_size, iscuda=input_tensor.is_cuda)
 
         layer_output_list = []
         last_state_list   = []
@@ -152,10 +165,10 @@ class ConvLSTM(nn.Module):
 
         return layer_output_list, last_state_list
 
-    def _init_hidden(self, batch_size, tensor_size):
+    def _init_hidden(self, batch_size, tensor_size, iscuda=True):
         init_states = []
         for i in range(self.num_layers):
-            init_states.append(self.cell_list[i].init_hidden(batch_size, tensor_size))
+            init_states.append(self.cell_list[i].init_hidden(batch_size, tensor_size, iscuda))
         return init_states
 
     @staticmethod

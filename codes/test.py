@@ -15,10 +15,14 @@ import torch
 import utils.util as util
 import data.util as data_util
 import models.modules.Sakuya_arch as Sakuya_arch
+from tqdm import tqdm
+from apex import amp
+
+import pdb
 
 def main():
     scale = 4
-    N_ot = 7 #3
+    N_ot = 3
     N_in = 1+ N_ot // 2
     os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
@@ -50,6 +54,9 @@ def main():
         device = torch.device('cuda') 
     else:
         device = torch.device('cpu')
+
+    # device = torch.device('cpu')
+
     save_folder = '../results/{}'.format(data_mode)
     util.mkdirs(save_folder)
     util.setup_logger('base', save_folder, 'test', level=logging.INFO, screen=True, tofile=True)
@@ -75,6 +82,7 @@ def main():
             imgs_temp[:,:,:,0:h,0:w] = imgs_in
 
             model_output = model(imgs_temp)
+
             # model_output.size(): torch.Size([1, 3, 4h, 4w])
             model_output = model_output[:, :, :, 0:scale*h, 0:scale*w]
             if isinstance(model_output, list) or isinstance(model_output, tuple):
@@ -90,11 +98,14 @@ def main():
     model.eval()
     model = model.to(device)
 
+    model = amp.initialize(model, opt_level='O1')
+
     avg_psnr_l = []
     avg_psnr_y_l = []
     sub_folder_name_l = []
     # total_time = []
     # for each sub-folder
+
     for sub_folder in sub_folder_l:
         gt_tested_list = []
         sub_folder_name = sub_folder.split('/')[-1]
@@ -134,8 +145,12 @@ def main():
         else:
             select_idx_list = util.test_index_generation(skip, N_ot, len(img_LR_l))
         # process each image
+        # pdb.set_trace()
+
         for select_idxs in select_idx_list:
             # get input images
+            print(select_idxs[0], " ...")
+
             select_idx = select_idxs[0]
             gt_idx = select_idxs[1]
             imgs_in = imgs.index_select(0, torch.LongTensor(select_idx)).unsqueeze(0).to(device)

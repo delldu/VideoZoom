@@ -11,6 +11,7 @@ from torch.nn.modules.utils import _pair
 from torch.autograd.function import once_differentiable
 
 import _ext as _backend
+import pdb
 
 
 class _DCNv2(Function):
@@ -22,14 +23,16 @@ class _DCNv2(Function):
         ctx.dilation = _pair(dilation)
         ctx.kernel_size = _pair(weight.shape[2:4])
         ctx.deformable_groups = deformable_groups
-        output = _backend.dcn_v2_forward(input, weight, bias,
-                                         offset, mask,
+        # pdb.set_trace()
+
+        output = _backend.dcn_v2_forward(input.float(), weight, bias,
+                                         offset.float(), mask.float(),
                                          ctx.kernel_size[0], ctx.kernel_size[1],
                                          ctx.stride[0], ctx.stride[1],
                                          ctx.padding[0], ctx.padding[1],
                                          ctx.dilation[0], ctx.dilation[1],
                                          ctx.deformable_groups)
-        ctx.save_for_backward(input, offset, mask, weight, bias)
+        ctx.save_for_backward(input.float(), offset.float(), mask.float(), weight, bias)
         return output
 
     @staticmethod

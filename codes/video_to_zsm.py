@@ -13,6 +13,11 @@ import models.modules.Sakuya_arch as Sakuya_arch
 
 import argparse
 from shutil import rmtree
+import pdb
+
+from tqdm import tqdm
+from apex import amp
+
 
 # For parsing commandline arguments
 parser = argparse.ArgumentParser()
@@ -20,7 +25,7 @@ parser.add_argument("--ffmpeg_dir", type=str, default="", help='path to ffmpeg.e
 parser.add_argument("--video", type=str, required=True, help='path of video to be converted')
 parser.add_argument("--model", type=str, required=True, help='path of pretrained model')
 parser.add_argument("--fps", type=float, default=24, help='specify fps of output video. Default: 24.')
-parser.add_argument("--N_out", type=int, default=5, help='Specify size of output frames of the network for faster conversion. This will depend on your cpu/gpu memory. Default: 7')
+parser.add_argument("--N_out", type=int, default=7, help='Specify size of output frames of the network for faster conversion. This will depend on your cpu/gpu memory. Default: 7')
 parser.add_argument("--output", type=str, default="output.mp4", help='Specify output file name. Default: output.mp4')
 args = parser.parse_args()
 
@@ -72,7 +77,10 @@ def main():
         device = torch.device('cuda') 
     else:
         device = torch.device('cpu')
-    
+
+    # device = torch.device('cpu')
+
+
     def single_forward(model, imgs_in):
         with torch.no_grad():
             # print(imgs_in.size()) # [1,5,3,270,480]
@@ -87,17 +95,23 @@ def main():
                 output = model_output[0]
             else:
                 output = model_output
+            torch.cuda.empty_cache()
         return output
 
     model.load_state_dict(torch.load(model_path), strict=True)
 
     model.eval()
     model = model.to(device)
+
+    model = amp.initialize(model, opt_level='O1')
+
     #### zsm images
     imgs = util.read_seq_imgs(save_folder)
     select_idx_list = util.test_index_generation(False, N_ot, len(imgs))
+    # pdb.set_trace()
     for select_idxs in select_idx_list:
         # get input images
+        print(select_idxs, " ...")
         select_idx = select_idxs[0]
         imgs_in = imgs.index_select(0, torch.LongTensor(select_idx)).unsqueeze(0).to(device)
         output = single_forward(model, imgs_in)
