@@ -25,7 +25,7 @@ parser.add_argument("--ffmpeg_dir", type=str, default="", help='path to ffmpeg.e
 parser.add_argument("--video", type=str, required=True, help='path of video to be converted')
 parser.add_argument("--model", type=str, required=True, help='path of pretrained model')
 parser.add_argument("--fps", type=float, default=24, help='specify fps of output video. Default: 24.')
-parser.add_argument("--N_out", type=int, default=7, help='Specify size of output frames of the network for faster conversion. This will depend on your cpu/gpu memory. Default: 7')
+parser.add_argument("--N_out", type=int, default=3, help='Specify size of output frames of the network for faster conversion. This will depend on your cpu/gpu memory. Default: 7')
 parser.add_argument("--output", type=str, default="output.mp4", help='Specify output file name. Default: output.mp4')
 args = parser.parse_args()
 
@@ -89,13 +89,18 @@ def main():
             w_n = int(4*np.ceil(w/4))
             imgs_temp = imgs_in.new_zeros(b,n,c,h_n,w_n)
             imgs_temp[:,:,:,0:h,0:w] = imgs_in
-            model_output = model(imgs_temp)
+            del imgs_in
+
+            model_output = model(imgs_temp).cpu()
+            torch.cuda.empty_cache()
+
             model_output = model_output[:, :, :, 0:scale*h, 0:scale*w]
             if isinstance(model_output, list) or isinstance(model_output, tuple):
                 output = model_output[0]
             else:
                 output = model_output
-            torch.cuda.empty_cache()
+            del imgs_temp
+
         return output
 
     model.load_state_dict(torch.load(model_path), strict=True)
@@ -114,6 +119,9 @@ def main():
         print(select_idxs, " ...")
         select_idx = select_idxs[0]
         imgs_in = imgs.index_select(0, torch.LongTensor(select_idx)).unsqueeze(0).to(device)
+        # pdb.set_trace()
+        # torch.Size([1, 4, 3, 540, 960])
+
         output = single_forward(model, imgs_in)
         outputs = output.data.float().cpu().squeeze(0)            
         # save imgs

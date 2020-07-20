@@ -421,6 +421,9 @@ class LunaTokis(nn.Module):
 
     def forward(self, x):
         B, N, C, H, W = x.size()  # N input video frames
+        # pdb.set_trace()
+        # torch.Size([1, 4, 3, 540, 960])
+
         #### extract LR features
         # L1
         L1_fea = self.lrelu(self.conv_first(x.view(-1, C, H, W)))
@@ -459,15 +462,33 @@ class LunaTokis(nn.Module):
         lstm_feats = torch.stack(to_lstm_fea, dim = 1)
         #### align using bidirectional deformable conv-lstm
         feats = self.ConvBLSTM(lstm_feats) 
-        B, T, C, H, W = feats.size()
+        del to_lstm_fea, lstm_feats, L1_fea, L2_fea, L3_fea, fusion_fea, aligned_fea
 
+
+        B, T, C, H, W = feats.size()
         feats = feats.view(B*T, C, H, W)
         out = self.recon_trunk(feats)
+        del feats
+
+        # torch.cuda.empty_cache()
+
         out = self.lrelu(self.pixel_shuffle(self.upconv1(out)))
+        # pdb.set_trace()
+        # (Pdb) pp out.size()
+        # torch.Size([3, 64, 1080, 1920])
+
         out = self.lrelu(self.pixel_shuffle(self.upconv2(out)))
+        # pdb.set_trace()
+        # torch.Size([3, 64, 2160, 3840])
 
         out = self.lrelu(self.HRconv(out))
+        # pdb.set_trace()
+        # torch.Size([3, 64, 2160, 3840])
+
         out = self.conv_last(out)
+        # pdb.set_trace()
+        # torch.Size([3, 3, 2160, 3840])
+
         _, _, K, G = out.size()
         outs = out.view(B, T, -1, K, G)
         return outs
