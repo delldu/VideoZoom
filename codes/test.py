@@ -22,7 +22,7 @@ import pdb
 
 def main():
     scale = 4
-    N_ot = 3
+    N_ot = 7
     N_in = 1+ N_ot // 2
     os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
@@ -149,7 +149,7 @@ def main():
 
         for select_idxs in select_idx_list:
             # get input images
-            print(select_idxs[0], " ...")
+            print(select_idxs, " ...")
 
             select_idx = select_idxs[0]
             gt_idx = select_idxs[1]
