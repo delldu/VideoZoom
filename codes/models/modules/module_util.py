@@ -51,31 +51,31 @@ class ResidualBlock_noBN(nn.Module):
         out = self.conv2(out)
         return identity + out
 
+# xxxx 3333
+# def flow_warp(x, flow, interp_mode='bilinear', padding_mode='zeros'):
+#     """Warp an image or feature map with optical flow
+#     Args:
+#         x (Tensor): size (N, C, H, W)
+#         flow (Tensor): size (N, H, W, 2), normal value
+#         interp_mode (str): 'nearest' or 'bilinear'
+#         padding_mode (str): 'zeros' or 'border' or 'reflection'
 
-def flow_warp(x, flow, interp_mode='bilinear', padding_mode='zeros'):
-    """Warp an image or feature map with optical flow
-    Args:
-        x (Tensor): size (N, C, H, W)
-        flow (Tensor): size (N, H, W, 2), normal value
-        interp_mode (str): 'nearest' or 'bilinear'
-        padding_mode (str): 'zeros' or 'border' or 'reflection'
-
-    Returns:
-        Tensor: warped image or feature map
-    """
-    print(x.size()[-2:])
-    print(flow.size()[1:3])
-    assert x.size()[-2:] == flow.size()[1:3]
-    B, C, H, W = x.size()
-    # mesh grid
-    grid_y, grid_x = torch.meshgrid(torch.arange(0, H), torch.arange(0, W))
-    grid = torch.stack((grid_x, grid_y), 2).float()  # W(x), H(y), 2
-    grid.requires_grad = False
-    grid = grid.type_as(x)
-    vgrid = grid + flow
-    # scale grid to [-1,1]
-    vgrid_x = 2.0 * vgrid[:, :, :, 0] / max(W - 1, 1) - 1.0
-    vgrid_y = 2.0 * vgrid[:, :, :, 1] / max(H - 1, 1) - 1.0
-    vgrid_scaled = torch.stack((vgrid_x, vgrid_y), dim=3)
-    output = F.grid_sample(x, vgrid_scaled, mode=interp_mode, padding_mode=padding_mode)
-    return output
+#     Returns:
+#         Tensor: warped image or feature map
+#     """
+#     print(x.size()[-2:])
+#     print(flow.size()[1:3])
+#     assert x.size()[-2:] == flow.size()[1:3]
+#     B, C, H, W = x.size()
+#     # mesh grid
+#     grid_y, grid_x = torch.meshgrid(torch.arange(0, H), torch.arange(0, W))
+#     grid = torch.stack((grid_x, grid_y), 2).float()  # W(x), H(y), 2
+#     grid.requires_grad = False
+#     grid = grid.type_as(x)
+#     vgrid = grid + flow
+#     # scale grid to [-1,1]
+#     vgrid_x = 2.0 * vgrid[:, :, :, 0] / max(W - 1, 1) - 1.0
+#     vgrid_y = 2.0 * vgrid[:, :, :, 1] / max(H - 1, 1) - 1.0
+#     vgrid_scaled = torch.stack((vgrid_x, vgrid_y), dim=3)
+#     output = F.grid_sample(x, vgrid_scaled, mode=interp_mode, padding_mode=padding_mode)
+#     return output

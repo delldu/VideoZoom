@@ -29,7 +29,7 @@ def main():
     #### model 
     #### TODO: change your model path here
     model_path = '../experiments/pretrained_models/xiang2020zooming.pth'
-    model = Sakuya_arch.LunaTokis(64, N_ot, 8, 5, 40)
+    model = Sakuya_arch.VideoZoomModel(64, N_ot, 8, 5, 40)
 
     #### dataset
     data_mode = 'Custom' #'Vid4' #'SPMC'#'Middlebury'#

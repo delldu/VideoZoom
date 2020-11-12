@@ -11,8 +11,9 @@ except ImportError:
     raise ImportError('Failed to import DCNv2 module.')
 import pdb
 
+# PCD -- Pyramid, Cascading and Deformable
 class PCD_Align(nn.Module):
-    ''' Alignment module using Pyramid, Cascading and Deformable convolution
+    ''' Alignment using Pyramid, Cascading and Deformable convolution
     with 3 pyramid levels.
     '''
     def __init__(self, nf=64, groups=8):
@@ -62,6 +63,10 @@ class PCD_Align(nn.Module):
 
         self.lrelu = nn.LeakyReLU(negative_slope=0.1, inplace=True)
 
+        # pdb.set_trace()
+        # nf = 64
+        # groups = 8
+
     def forward(self, fea1, fea2):
         '''align other neighboring frames to the reference frame in the feature level
         fea1, fea2: [L1, L2, L3], each with [B,C,H,W] features
@@ -93,6 +98,9 @@ class PCD_Align(nn.Module):
         L2_fea = F.interpolate(L2_fea, scale_factor=2, mode='bilinear', align_corners=False)
         L1_fea = self.L1_fea_conv_1(torch.cat([L1_fea, L2_fea], dim=1))
         y.append(L1_fea)
+        # pdb.set_trace()
+        # (Pdb) type(y), len(y), y[0].size()
+        # (<class 'list'>, 1, torch.Size([1, 64, 272, 480]))
 
         # param. of fea2
         # L3
@@ -121,6 +129,13 @@ class PCD_Align(nn.Module):
         y.append(L1_fea)
         
         y = torch.cat(y, dim=1)
+
+        del L1_fea, L2_fea, L3_fea, L1_offset, L2_offset, L3_offset
+        torch.cuda.empty_cache()
+        # pdb.set_trace()
+        # (Pdb) y.size()
+        # torch.Size([1, 128, 272, 480])
+
         return y
 
 class Easy_PCD(nn.Module):
@@ -157,6 +172,10 @@ class Easy_PCD(nn.Module):
         fea2 = [L1_fea[:, 1, :, :, :].clone(), L2_fea[:, 1, :, :, :].clone(), L3_fea[:, 1, :, :, :].clone()]
         aligned_fea = self.pcd_align(fea1, fea2)
         fusion_fea = self.fusion(aligned_fea) # [B, N, C, H, W]
+
+        del L1_fea, L2_fea, L3_fea, fea1, fea2
+        torch.cuda.empty_cache()
+
         return fusion_fea
 
 class DeformableConvLSTM(ConvLSTM):
@@ -184,7 +203,6 @@ class DeformableConvLSTM(ConvLSTM):
         #### activation function
         self.lrelu = nn.LeakyReLU(negative_slope=0.1, inplace=True)
         # pdb.set_trace()
-        # (Pdb) a
         # input_size = (48, 48)
         # input_dim = 64
         # hidden_dim = [64]
@@ -370,20 +388,37 @@ class BiDeformableConvLSTM(nn.Module):
         # pdb.set_trace()
 
     def forward(self, x):
+        # pdb.set_trace()
+        # (Pdb) x.size()
+        # torch.Size([1, 3, 64, 272, 480])
+        # (Pdb) for i in reversed(range(3)): print(i)
+        # 2 1 0
         reversed_idx = list(reversed(range(x.shape[1])))
         x_rev = x[:, reversed_idx, ...]
         out_fwd, _ = self.forward_net(x)
         out_rev, _ = self.forward_net(x_rev)
+        # (Pdb) type(out_fwd), len(out_fwd), out_fwd[0].size()
+        # (<class 'list'>, 1, torch.Size([1, 3, 64, 272, 480]))
+        # (Pdb) type(out_rev), len(out_rev), out_rev[0].size()
+        # (<class 'list'>, 1, torch.Size([1, 3, 64, 272, 480]))
         rev_rev = out_rev[0][:, reversed_idx, ...]
         B, N, C, H, W = out_fwd[0].size()
         result = torch.cat((out_fwd[0], rev_rev), dim=2)
         result = result.view(B*N,-1,H,W)
         result = self.conv_1x1(result)
+        # pdb.set_trace()
+        # (Pdb) result.size()
+        # torch.Size([3, 64, 272, 480])
+        # (Pdb) B, N, C, H, W
+        # (1, 3, 64, 272, 480) ==> (1, 64, 3, 272, 480)
+        del out_fwd, out_rev, rev_rev
+        torch.cuda.empty_cache()
+
         return result.view(B, -1, C, H, W) 
 
-class LunaTokis(nn.Module):
+class VideoZoomModel(nn.Module):
     def __init__(self, nf=64, nframes=3, groups=8, front_RBs=5, back_RBs=10):
-        super(LunaTokis, self).__init__()
+        super(VideoZoomModel, self).__init__()
         self.nf = nf
         self.in_frames = 1 + nframes // 2
         self.ot_frames = nframes
@@ -418,11 +453,17 @@ class LunaTokis(nn.Module):
         self.lrelu = nn.LeakyReLU(negative_slope=0.1, inplace=True)
 
         # pdb.set_trace()
+        # nf = 64
+        # nframes = 3
+        # groups = 8
+        # front_RBs = 5
+        # back_RBs = 40
 
     def forward(self, x):
         B, N, C, H, W = x.size()  # N input video frames
-        # pdb.set_trace()
-        # torch.Size([1, 4, 3, 540, 960])
+        # pdb.set_trace() BxTxCxHxW
+        # torch.Size([1, 2, 3, 272, 480])
+        # ==> torch.Size([1, 3, 3, 1088, 1920])
 
         #### extract LR features
         # L1
@@ -445,6 +486,13 @@ class LunaTokis(nn.Module):
         1: + ...    ...        ...  fusion_fea, fea2
         2: + ...    ...        ...    ...       ...   fusion_fea, fea2
         '''
+        # pdb.set_trace()
+        # (Pdb) L1_fea.size(), L2_fea.size(), L3_fea.size()
+        # (torch.Size([1, 2, 64, 272, 480]), 
+        # torch.Size([1, 2, 64, 136, 240]), 
+        # torch.Size([1, 2, 64, 68, 120]))
+        # (Pdb) pp N 2
+
         for idx in range(N-1):
             fea1 = [
                 L1_fea[:, idx, :, :, :].clone(), L2_fea[:, idx, :, :, :].clone(), L3_fea[:, idx, :, :, :].clone()
@@ -460,17 +508,23 @@ class LunaTokis(nn.Module):
             to_lstm_fea.append(fusion_fea)
             to_lstm_fea.append(fea2[0])
         lstm_feats = torch.stack(to_lstm_fea, dim = 1)
+
+        # pdb.set_trace()
+        # (Pdb) lstm_feats.size()
+        # torch.Size([1, 3, 64, 272, 480])
+
         #### align using bidirectional deformable conv-lstm
         feats = self.ConvBLSTM(lstm_feats) 
-        del to_lstm_fea, lstm_feats, L1_fea, L2_fea, L3_fea, fusion_fea, aligned_fea
 
+        del to_lstm_fea, lstm_feats, L1_fea, L2_fea, L3_fea, \
+            fusion_fea, aligned_fea, fea1, fea2
+        torch.cuda.empty_cache()
 
         B, T, C, H, W = feats.size()
         feats = feats.view(B*T, C, H, W)
         out = self.recon_trunk(feats)
         del feats
-
-        # torch.cuda.empty_cache()
+        torch.cuda.empty_cache()
 
         out = self.lrelu(self.pixel_shuffle(self.upconv1(out)))
         # pdb.set_trace()
@@ -491,4 +545,11 @@ class LunaTokis(nn.Module):
 
         _, _, K, G = out.size()
         outs = out.view(B, T, -1, K, G)
+        # pdb.set_trace()
+        # (Pdb) out.size()
+        # torch.Size([3, 3, 1088, 1920])
+        # ==> 
+        # (Pdb) outs.size()
+        # torch.Size([1, 3, 3, 1088, 1920])
+
         return outs

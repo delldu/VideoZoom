@@ -15,6 +15,7 @@ from torchvision.utils import make_grid
 from shutil import get_terminal_size
 import glob
 import re
+import pdb
 
 import yaml
 try:
@@ -253,6 +254,10 @@ def read_image(img_path):
     Return img: HWC, BGR, [0,1], numpy
     '''
     img_GT = cv2.imread(img_path)
+    # for out of GPU memory !!!
+    x, y = img_GT.shape[0:2]
+    img_GT = cv2.resize(img_GT, (int(y / 2), int(x / 2)))
+    
     img = img_GT.astype(np.float32) / 255.
     return img
 
@@ -263,6 +268,7 @@ def read_seq_imgs(img_seq_path):
     img_path_l.sort(key=lambda x: int(re.search(r'\d+', os.path.basename(x)).group()))
     img_l = [read_image(v) for v in img_path_l]
     # stack to TCHW, RGB, [0,1], torch
+    # pdb.set_trace()
     imgs = np.stack(img_l, axis=0)
     imgs = imgs[:, :, :, [2, 1, 0]]
     imgs = torch.from_numpy(np.ascontiguousarray(np.transpose(imgs, (0, 3, 1, 2)))).float()

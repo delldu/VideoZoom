@@ -11,19 +11,23 @@ class ConvLSTMCell(nn.Module):
         
         Parameters
         ----------
-        input_size: (int, int)
-            Height and width of input tensor as (height, width).
-        input_dim: int
-            Number of channels of input tensor.
-        hidden_dim: int
-            Number of channels of hidden state.
-        kernel_size: (int, int)
-            Size of the convolutional kernel.
-        bias: bool
-            Whether or not to add the bias.
+        input_size: (int, int) Height and width of input tensor as (height, width).
+        input_dim: int Number of channels of input tensor.
+        hidden_dim: int Number of channels of hidden state.
+        kernel_size: (int, int) Size of the convolutional kernel.
+        bias: bool Whether or not to add the bias.
         """
 
         super(ConvLSTMCell, self).__init__()
+
+        # pdb.set_trace()
+        # (Pdb) a
+        # self = ConvLSTMCell()
+        # input_size = (48, 48)
+        # input_dim = 64
+        # hidden_dim = 64
+        # kernel_size = (3, 3)
+        # bias = True
 
         self.height, self.width = input_size
         self.input_dim  = input_dim
@@ -50,6 +54,10 @@ class ConvLSTMCell(nn.Module):
 
 
     def forward(self, input_tensor, cur_state):
+        # pdb.set_trace()
+        # torch.Size([1, 64, 272, 480])
+        # Pdb) type(cur_state), len(cur_state), cur_state[0].size(), cur_state[1].size()
+        # (<class 'list'>, 2, torch.Size([1, 64, 272, 480]), torch.Size([1, 64, 272, 480]))
         
         h_cur, c_cur = cur_state
 
@@ -64,7 +72,15 @@ class ConvLSTMCell(nn.Module):
 
         c_next = f * c_cur + i * g
         h_next = o * torch.tanh(c_next)
-        
+
+        del i, f, o, g, cc_i, cc_f, cc_o, cc_g, combined, combined_conv, h_cur, c_cur
+        torch.cuda.empty_cache()
+
+        # pdb.set_trace()
+        # hidden state ht and cell state ct
+        # (Pdb) h_next.size(), c_next.size()
+        # (torch.Size([1, 64, 272, 480]), torch.Size([1, 64, 272, 480]))
+
         return h_next, c_next
 
     def init_hidden(self, batch_size, tensor_size, iscuda=True):
@@ -76,6 +92,7 @@ class ConvLSTMCell(nn.Module):
             return (torch.zeros(batch_size, self.hidden_dim, height, width),
                 torch.zeros(batch_size, self.hidden_dim, height, width))
 
+# xxxx 3333 forward    
 class ConvLSTM(nn.Module):
 
     def __init__(self, input_size, input_dim, hidden_dim, kernel_size, num_layers,
@@ -111,6 +128,23 @@ class ConvLSTM(nn.Module):
                                           bias=self.bias))
 
         self.cell_list = nn.ModuleList(cell_list)
+        # pdb.set_trace()
+        # (Pdb) a
+        # self = DeformableConvLSTM(
+        #   (cell_list): ModuleList(
+        #     (0): ConvLSTMCell(
+        #       (conv): Conv2d(128, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+        #     )
+        #   )
+        # )
+        # input_size = (48, 48)
+        # input_dim = 64
+        # hidden_dim = [64]
+        # kernel_size = [(3, 3)]
+        # num_layers = 1
+        # batch_first = True
+        # bias = True
+        # return_all_layers = False
 
     def forward(self, input_tensor, hidden_state=None):
         """
@@ -136,6 +170,8 @@ class ConvLSTM(nn.Module):
         else:
             tensor_size = (input_tensor.size(3),input_tensor.size(4))
             hidden_state = self._init_hidden(batch_size=input_tensor.size(0),tensor_size=tensor_size, iscuda=input_tensor.is_cuda)
+
+        pdb.set_trace()
 
         layer_output_list = []
         last_state_list   = []
@@ -163,6 +199,8 @@ class ConvLSTM(nn.Module):
             layer_output_list = layer_output_list[-1:]
             last_state_list   = last_state_list[-1:]
 
+        pdb.set_trace()
+
         return layer_output_list, last_state_list
 
     def _init_hidden(self, batch_size, tensor_size, iscuda=True):
@@ -173,6 +211,9 @@ class ConvLSTM(nn.Module):
 
     @staticmethod
     def _check_kernel_size_consistency(kernel_size):
+        # pdb.set_trace()
+        # (Pdb) type(kernel_size) <class 'tuple'>
+        # (Pdb) kernel_size (3, 3)
         if not (isinstance(kernel_size, tuple) or
                     (isinstance(kernel_size, list) and all([isinstance(elem, tuple) for elem in kernel_size]))):
             raise ValueError('`kernel_size` must be tuple or list of tuples')
@@ -181,8 +222,13 @@ class ConvLSTM(nn.Module):
     def _extend_for_multilayer(param, num_layers):
         if not isinstance(param, list):
             param = [param] * num_layers
+        # pdb.set_trace()
+        # (Pdb) a
+        # param = [(3, 3)]
+        # num_layers = 1
         return param
-    
+
+# xxxx 3333 forward   
 class ConvBLSTM(nn.Module):
     # Constructor
     def __init__(self, input_size, input_dim, hidden_dim,
@@ -200,7 +246,7 @@ class ConvBLSTM(nn.Module):
         """
         xforward, xreverse = B T C H W tensors.
         """
-
+        pdb.set_trace()
         y_out_fwd, _ = self.forward_net(xforward)
         y_out_rev, _ = self.reverse_net(xreverse)
         
@@ -211,5 +257,7 @@ class ConvBLSTM(nn.Module):
         reversed_idx = list(reversed(range(y_out_rev.shape[1])))
         y_out_rev = y_out_rev[:, reversed_idx, ...] # reverse temporal outputs.
         ycat = torch.cat((y_out_fwd, y_out_rev), dim=2)
+
+        pdb.set_trace()
         
         return ycat

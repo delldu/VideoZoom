@@ -26,27 +26,27 @@ parser.add_argument("--video", type=str, required=True, help='path of video to b
 parser.add_argument("--model", type=str, required=True, help='path of pretrained model')
 parser.add_argument("--fps", type=float, default=24, help='specify fps of output video. Default: 24.')
 parser.add_argument("--N_out", type=int, default=3, help='Specify size of output frames of the network for faster conversion. This will depend on your cpu/gpu memory. Default: 7')
-parser.add_argument("--output", type=str, default="output.mp4", help='Specify output file name. Default: output.mp4')
+parser.add_argument("--output", type=str, default="dataset", help='Specify output file name. Default: output.mp4')
 args = parser.parse_args()
 
-def check():
-    """
-    Checks the validity of commandline arguments.
-    Parameters
-    ----------
-        None
-    Returns
-    -------
-        error : string
-            Error message if error occurs otherwise blank string.
-    """
+# def check():
+#     """
+#     Checks the validity of commandline arguments.
+#     Parameters
+#     ----------
+#         None
+#     Returns
+#     -------
+#         error : string
+#             Error message if error occurs otherwise blank string.
+#     """
 
-    error = ""
-    if (args.batch_size not in [3, 5, 7]):
-        error = "Error: --N_out has to be 3 or 5 or 7"
-    # if ".mkv" not in args.output:
-        # error = "output needs to have a video container"
-    return error
+#     error = ""
+#     if (args.batch_size not in [3, 5, 7]):
+#         error = "Error: --N_out has to be 3 or 5 or 7"
+#     # if ".mkv" not in args.output:
+#         # error = "output needs to have a video container"
+#     return error
 
 def main():
     scale = 4
@@ -56,20 +56,20 @@ def main():
 
     #### model
     model_path = args.model
-    model = Sakuya_arch.LunaTokis(64, N_ot, 8, 5, 40)
+    model = Sakuya_arch.VideoZoomModel(64, N_ot, 8, 5, 40)
 
     #### extract the input video to temporary folder
-    save_folder = osp.join(osp.dirname(args.output), '.delme')
-    save_out_folder = osp.join(osp.dirname(args.output), '.hr_delme')
-    util.mkdirs(save_folder)
-    util.mkdirs(save_out_folder)
-    error = util.extract_frames(args.ffmpeg_dir, args.video, save_folder)
-    if error:
-        print(error)
-        exit(1)
+    save_folder = 'dataset/input'
+    save_out_folder = 'dataset/output'
+    # util.mkdirs(save_folder)
+    # util.mkdirs(save_out_folder)
+    # error = util.extract_frames(args.ffmpeg_dir, args.video, save_folder)
+    # if error:
+    #     print(error)
+    #     exit(1)
 
     # temporal padding mode
-    padding = 'replicate'
+    # padding = 'replicate'
     save_imgs = True
 
     ############################################################################
@@ -92,16 +92,22 @@ def main():
             del imgs_in
 
             model_output = model(imgs_temp).cpu()
-            torch.cuda.empty_cache()
+            # pdb.set_trace() what's wrong ?
+            # torch.Size([1, 2, 3, 272, 480])
+            # (Pdb) model_output.size()
+            # torch.Size([1, 3, 3, 1088, 1920])
 
             model_output = model_output[:, :, :, 0:scale*h, 0:scale*w]
-            if isinstance(model_output, list) or isinstance(model_output, tuple):
-                output = model_output[0]
-            else:
-                output = model_output
+            # if isinstance(model_output, list) or isinstance(model_output, tuple):
+            #     pdb.set_trace()
+            #     output = model_output[0]
+            # else:
+            #     pdb.set_trace()
+            #     output = model_output
             del imgs_temp
+            torch.cuda.empty_cache()
 
-        return output
+        return model_output
 
     model.load_state_dict(torch.load(model_path), strict=True)
 
@@ -114,18 +120,28 @@ def main():
     imgs = util.read_seq_imgs(save_folder)
     select_idx_list = util.test_index_generation(False, N_ot, len(imgs))
     # pdb.set_trace()
+    # (Pdb) type(select_idx_list),len(select_idx_list), select_idx_list[0], select_idx_list[1]
+    # (<class 'list'>, 99, [[0, 1], [0, 1, 2]], [[1, 2], [2, 3, 4]])
+    # (Pdb) imgs.size(), TxCxHxW
+    # torch.Size([100, 3, 270, 480])
+
     for select_idxs in select_idx_list:
         # get input images
         print(select_idxs, " ...")
         select_idx = select_idxs[0]
         imgs_in = imgs.index_select(0, torch.LongTensor(select_idx)).unsqueeze(0).to(device)
-        # pdb.set_trace()
-        # torch.Size([1, 4, 3, 540, 960])
+        # (Pdb) imgs_in.size()
+        # torch.Size([1, 2, 3, 270, 480]), [B,T,C,H,W]
 
         output = single_forward(model, imgs_in)
+        # (Pdb) output.size()
+        # torch.Size([1, 3, 3, 1080, 1920])
+
         outputs = output.data.float().cpu().squeeze(0)            
         # save imgs
         out_idx = select_idxs[1]
+        # pdb.set_trace()
+
         for idx,name_idx in enumerate(out_idx):
             output_f = outputs[idx,...].squeeze(0)
             if save_imgs:     
@@ -134,11 +150,11 @@ def main():
 
     # now turn output images to video
     # generate mp4
-    util.create_video(args.ffmpeg_dir, save_out_folder, args.output, args.fps)
+    # util.create_video(args.ffmpeg_dir, save_out_folder, args.output, args.fps)
 
     # remove tmp folder    
-    rmtree(save_folder)
-    rmtree(save_out_folder)
+    # rmtree(save_folder)
+    # rmtree(save_out_folder)
     
     exit(0)
 
