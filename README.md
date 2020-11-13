@@ -106,7 +106,7 @@ python $ZOOMING_ROOT/codes/data_scripts/create_lmdb_mp.py
 ```Shell
 python train.py -opt options/train/train_zsm.yml
 ```
-After training, your model `xxxx_G.pth` and its training states, and a corresponding log file `train_LunaTokis_scratch_b16p32f5b40n7l1_600k_Vimeo_xxxx.log` are placed in the directory of `$ZOOMING_ROOT/experiments/LunaTokis_scratch_b16p32f5b40n7l1_600k_Vimeo/`.
+After training, your model `xxxx_G.pth` and its training states, and a corresponding log file `train_VideoZoomModel_scratch_b16p32f5b40n7l1_600k_Vimeo_xxxx.log` are placed in the directory of `$ZOOMING_ROOT/experiments/VideoZoomModel_scratch_b16p32f5b40n7l1_600k_Vimeo/`.
 
 ### Testing
 We provide the test code for both standard test sets (Vid4, SPMC, etc.) and custom video frames. 

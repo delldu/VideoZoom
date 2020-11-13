@@ -1,18 +1,15 @@
 #!/usr/bin/env python
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import division
+from __future__ import absolute_import, division, print_function
 
+import pdb
 import time
+
 import torch
 import torch.nn as nn
 from torch.autograd import gradcheck
 
-from dcn_v2 import dcn_v2_conv, DCNv2, DCN
-from dcn_v2 import dcn_v2_pooling, DCNv2Pooling, DCNPooling
-
-import pdb
-
+from dcn_v2 import (DCN, DCNPooling, DCNv2, DCNv2Pooling, dcn_v2_conv,
+                    dcn_v2_pooling)
 
 deformable_groups = 1
 # N, inC, inH, inW = 2, 2, 4, 4
@@ -70,6 +67,7 @@ def check_zero_offset():
         print(input)
         print(output)
 
+
 def check_gradient_dconv():
 
     input = torch.rand(N, inC, inH, inW) * 0.01
@@ -107,7 +105,7 @@ def check_gradient_dconv():
     # (1, 1, 1, 1)
     print('check_gradient_dconv: ',
           gradcheck(dcn_v2_conv, (input, offset, mask, weight, bias,
-                    stride, padding, dilation, deformable_groups),
+                                  stride, padding, dilation, deformable_groups),
                     eps=1e-3, atol=1e-4, rtol=1e-2))
 
 

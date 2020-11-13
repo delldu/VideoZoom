@@ -1,18 +1,18 @@
-import os
-import math
 import argparse
-import random
 import logging
+import math
+import os
+import random
 
 import torch
 import torch.distributed as dist
 import torch.multiprocessing as mp
-from data.data_sampler import DistIterSampler
 
 import options.options as option
-from utils import util
 from data import create_dataloader, create_dataset
+from data.data_sampler import DistIterSampler
 from models import create_model
+from utils import util
 
 
 def init_dist(backend='nccl', **kwargs):
@@ -27,7 +27,7 @@ def init_dist(backend='nccl', **kwargs):
 
 
 def main():
-    #### options
+    # options
     parser = argparse.ArgumentParser()
     parser.add_argument('-opt', type=str, help='Path to option YAML file.')
     parser.add_argument('--launcher', choices=['none', 'pytorch'], default='none',
@@ -36,7 +36,7 @@ def main():
     args = parser.parse_args()
     opt = option.parse(args.opt, is_train=True)
 
-    #### distributed training settings
+    # distributed training settings
     if args.launcher == 'none':  # disabled distributed training
         opt['dist'] = False
         rank = -1
@@ -47,7 +47,7 @@ def main():
         world_size = torch.distributed.get_world_size()
         rank = torch.distributed.get_rank()
 
-    #### loading resume state if exists
+    # loading resume state if exists
     if opt['path'].get('resume_state', None):
         # distributed resuming: all load into default GPU
         device_id = torch.cuda.current_device()
@@ -81,13 +81,14 @@ def main():
                 from tensorboardX import SummaryWriter
             tb_logger = SummaryWriter(log_dir='../tb_logger/' + opt['name'])
     else:
-        util.setup_logger('base', opt['path']['log'], 'train', level=logging.INFO, screen=True)
+        util.setup_logger('base', opt['path']['log'],
+                          'train', level=logging.INFO, screen=True)
         logger = logging.getLogger('base')
 
     # convert to NoneDict, which returns None for missing keys
     opt = option.dict_to_nonedict(opt)
 
-    #### random seed
+    # random seed
     seed = opt['train']['manual_seed']
     if seed is None:
         seed = random.randint(1, 10000)
@@ -98,20 +99,24 @@ def main():
     torch.backends.cudnn.benckmark = True
     # torch.backends.cudnn.deterministic = True
 
-    #### create train and val dataloader
+    # create train and val dataloader
     dataset_ratio = 200  # enlarge the size of each epoch
     for phase, dataset_opt in opt['datasets'].items():
         if phase == 'train':
             train_set = create_dataset(dataset_opt)
-            train_size = int(math.ceil(len(train_set) / dataset_opt['batch_size']))
+            train_size = int(
+                math.ceil(len(train_set) / dataset_opt['batch_size']))
             total_iters = int(opt['train']['niter'])
             total_epochs = int(math.ceil(total_iters / train_size))
             if opt['dist']:
-                train_sampler = DistIterSampler(train_set, world_size, rank, dataset_ratio)
-                total_epochs = int(math.ceil(total_iters / (train_size * dataset_ratio)))
+                train_sampler = DistIterSampler(
+                    train_set, world_size, rank, dataset_ratio)
+                total_epochs = int(
+                    math.ceil(total_iters / (train_size * dataset_ratio)))
             else:
                 train_sampler = None
-            train_loader = create_dataloader(train_set, dataset_opt, opt, train_sampler)
+            train_loader = create_dataloader(
+                train_set, dataset_opt, opt, train_sampler)
             if rank <= 0:
                 logger.info('Number of train images: {:,d}, iters: {:,d}'.format(
                     len(train_set), train_size))
@@ -127,13 +132,14 @@ def main():
                     dataset_opt['name'], len(val_set)))
             '''
         else:
-            raise NotImplementedError('Phase [{:s}] is not recognized.'.format(phase))
+            raise NotImplementedError(
+                'Phase [{:s}] is not recognized.'.format(phase))
     assert train_loader is not None
 
-    #### create model
+    # create model
     model = create_model(opt)
 
-    #### resume training
+    # resume training
     if resume_state:
         logger.info('Resuming training from epoch: {}, iter: {}.'.format(
             resume_state['epoch'], resume_state['iter']))
@@ -145,8 +151,9 @@ def main():
         current_step = 0
         start_epoch = 0
 
-    #### training
-    logger.info('Start training from epoch: {:d}, iter: {:d}'.format(start_epoch, current_step))
+    # training
+    logger.info('Start training from epoch: {:d}, iter: {:d}'.format(
+        start_epoch, current_step))
     for epoch in range(start_epoch, total_epochs + 1):
         if opt['dist']:
             train_sampler.set_epoch(epoch)
@@ -154,17 +161,19 @@ def main():
             current_step += 1
             if current_step > total_iters:
                 break
-            #### update learning rate
-            model.update_learning_rate(current_step, warmup_iter=opt['train']['warmup_iter'])
+            # update learning rate
+            model.update_learning_rate(
+                current_step, warmup_iter=opt['train']['warmup_iter'])
 
-            #### training
+            # training
             model.feed_data(train_data)
             model.optimize_parameters(current_step)
 
-            #### log
+            # log
             if current_step % opt['logger']['print_freq'] == 0:
                 logs = model.get_current_log()
-                message = '<epoch:{:3d}, iter:{:8,d}, lr:('.format(epoch, current_step)
+                message = '<epoch:{:3d}, iter:{:8,d}, lr:('.format(
+                    epoch, current_step)
                 for v in model.get_current_learning_rate():
                     message += '{:.3e},'.format(v)
                 message += ')>'
@@ -176,10 +185,10 @@ def main():
                             tb_logger.add_scalar(k, v, current_step)
                 if rank <= 0:
                     logger.info(message)
-            #### validation
+            # validation
             # currently, it does not support validation during training
 
-            #### save models and training states
+            # save models and training states
             if current_step % opt['logger']['save_checkpoint_freq'] == 0:
                 if rank <= 0:
                     logger.info('Saving models and training states.')

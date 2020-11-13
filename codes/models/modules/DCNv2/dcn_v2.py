@@ -1,17 +1,16 @@
 #!/usr/bin/env python
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import division
+from __future__ import absolute_import, division, print_function
 
 import math
+import pdb
+
 import torch
 from torch import nn
 from torch.autograd import Function
-from torch.nn.modules.utils import _pair
 from torch.autograd.function import once_differentiable
+from torch.nn.modules.utils import _pair
 
 import _ext as _backend
-import pdb
 
 
 class _DCNv2(Function):
@@ -32,7 +31,8 @@ class _DCNv2(Function):
                                          ctx.padding[0], ctx.padding[1],
                                          ctx.dilation[0], ctx.dilation[1],
                                          ctx.deformable_groups)
-        ctx.save_for_backward(input.float(), offset.float(), mask.float(), weight, bias)
+        ctx.save_for_backward(input.float(), offset.float(),
+                              mask.float(), weight, bias)
         return output
 
     @staticmethod
@@ -103,7 +103,8 @@ class DCN(DCNv2):
         super(DCN, self).__init__(in_channels, out_channels,
                                   kernel_size, stride, padding, dilation, deformable_groups)
 
-        channels_ = self.deformable_groups * 3 * self.kernel_size[0] * self.kernel_size[1]
+        channels_ = self.deformable_groups * 3 * \
+            self.kernel_size[0] * self.kernel_size[1]
         self.conv_offset_mask = nn.Conv2d(self.in_channels,
                                           channels_,
                                           kernel_size=self.kernel_size,
@@ -137,7 +138,8 @@ class DCN_sep(DCNv2):
         super(DCN_sep, self).__init__(in_channels, out_channels, kernel_size, stride, padding,
                                       dilation, deformable_groups)
 
-        channels_ = self.deformable_groups * 3 * self.kernel_size[0] * self.kernel_size[1]
+        channels_ = self.deformable_groups * 3 * \
+            self.kernel_size[0] * self.kernel_size[1]
         self.conv_offset_mask = nn.Conv2d(self.in_channels, channels_, kernel_size=self.kernel_size,
                                           stride=self.stride, padding=self.padding, bias=True)
         self.init_offset()
@@ -155,7 +157,8 @@ class DCN_sep(DCNv2):
 
         offset_mean = torch.mean(torch.abs(offset))
         if offset_mean > 100:
-            logger.warning('Offset mean is {}, larger than 100.'.format(offset_mean))
+            logger.warning(
+                'Offset mean is {}, larger than 100.'.format(offset_mean))
 
         mask = torch.sigmoid(mask)
         return dcn_v2_conv(input, offset, mask, self.weight, self.bias, self.stride, self.padding,

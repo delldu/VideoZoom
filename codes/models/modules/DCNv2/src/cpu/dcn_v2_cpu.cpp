@@ -16,19 +16,19 @@
 
 at::Tensor
 dcn_v2_cpu_forward(const at::Tensor &input,
-                    const at::Tensor &weight,
-                    const at::Tensor &bias,
-                    const at::Tensor &offset,
-                    const at::Tensor &mask,
-                    const int kernel_h,
-                    const int kernel_w,
-                    const int stride_h,
-                    const int stride_w,
-                    const int pad_h,
-                    const int pad_w,
-                    const int dilation_h,
-                    const int dilation_w,
-                    const int deformable_group)
+                   const at::Tensor &weight,
+                   const at::Tensor &bias,
+                   const at::Tensor &offset,
+                   const at::Tensor &mask,
+                   const int kernel_h,
+                   const int kernel_w,
+                   const int stride_h,
+                   const int stride_w,
+                   const int pad_h,
+                   const int pad_w,
+                   const int dilation_h,
+                   const int dilation_w,
+                   const int deformable_group)
 {
     const int batch = input.size(0);
     const int channels = input.size(1);
@@ -75,13 +75,13 @@ dcn_v2_cpu_forward(const at::Tensor &input,
                          output_n.data_ptr<scalar_t>(), n_);
 
         modulated_deformable_im2col_cpu(input_n.data_ptr<scalar_t>(),
-                                         offset_n.data_ptr<scalar_t>(),
-                                         mask_n.data_ptr<scalar_t>(),
-                                         1, channels, height, width,
-                                         height_out, width_out, kernel_h, kernel_w,
-                                         pad_h, pad_w, stride_h, stride_w, dilation_h, dilation_w,
-                                         deformable_group,
-                                         columns.data_ptr<scalar_t>());
+                                        offset_n.data_ptr<scalar_t>(),
+                                        mask_n.data_ptr<scalar_t>(),
+                                        1, channels, height, width,
+                                        height_out, width_out, kernel_h, kernel_w,
+                                        pad_h, pad_w, stride_h, stride_w, dilation_h, dilation_w,
+                                        deformable_group,
+                                        columns.data_ptr<scalar_t>());
 
         //(k * m)  x  (m * n)
         // Y = WC
@@ -97,16 +97,16 @@ dcn_v2_cpu_forward(const at::Tensor &input,
 }
 
 std::vector<at::Tensor> dcn_v2_cpu_backward(const at::Tensor &input,
-                                             const at::Tensor &weight,
-                                             const at::Tensor &bias,
-                                             const at::Tensor &offset,
-                                             const at::Tensor &mask,
-                                             const at::Tensor &grad_output,
-                                             int kernel_h, int kernel_w,
-                                             int stride_h, int stride_w,
-                                             int pad_h, int pad_w,
-                                             int dilation_h, int dilation_w,
-                                             int deformable_group)
+                                            const at::Tensor &weight,
+                                            const at::Tensor &bias,
+                                            const at::Tensor &offset,
+                                            const at::Tensor &mask,
+                                            const at::Tensor &grad_output,
+                                            int kernel_h, int kernel_w,
+                                            int stride_h, int stride_w,
+                                            int pad_h, int pad_w,
+                                            int dilation_h, int dilation_w,
+                                            int deformable_group)
 {
 
     THArgCheck(input.is_contiguous(), 1, "input tensor has to be contiguous");
@@ -170,34 +170,34 @@ std::vector<at::Tensor> dcn_v2_cpu_backward(const at::Tensor &input,
 
         // gradient w.r.t. input coordinate data
         modulated_deformable_col2im_coord_cpu(columns.data_ptr<scalar_t>(),
-                                               input_n.data_ptr<scalar_t>(),
-                                               offset_n.data_ptr<scalar_t>(),
-                                               mask_n.data_ptr<scalar_t>(),
-                                               1, channels, height, width,
-                                               height_out, width_out, kernel_h, kernel_w,
-                                               pad_h, pad_w, stride_h, stride_w,
-                                               dilation_h, dilation_w, deformable_group,
-                                               grad_offset_n.data_ptr<scalar_t>(),
-                                               grad_mask_n.data_ptr<scalar_t>());
+                                              input_n.data_ptr<scalar_t>(),
+                                              offset_n.data_ptr<scalar_t>(),
+                                              mask_n.data_ptr<scalar_t>(),
+                                              1, channels, height, width,
+                                              height_out, width_out, kernel_h, kernel_w,
+                                              pad_h, pad_w, stride_h, stride_w,
+                                              dilation_h, dilation_w, deformable_group,
+                                              grad_offset_n.data_ptr<scalar_t>(),
+                                              grad_mask_n.data_ptr<scalar_t>());
         // gradient w.r.t. input data
         modulated_deformable_col2im_cpu(columns.data_ptr<scalar_t>(),
-                                         offset_n.data_ptr<scalar_t>(),
-                                         mask_n.data_ptr<scalar_t>(),
-                                         1, channels, height, width,
-                                         height_out, width_out, kernel_h, kernel_w,
-                                         pad_h, pad_w, stride_h, stride_w,
-                                         dilation_h, dilation_w, deformable_group,
-                                         grad_input_n.data_ptr<scalar_t>());
+                                        offset_n.data_ptr<scalar_t>(),
+                                        mask_n.data_ptr<scalar_t>(),
+                                        1, channels, height, width,
+                                        height_out, width_out, kernel_h, kernel_w,
+                                        pad_h, pad_w, stride_h, stride_w,
+                                        dilation_h, dilation_w, deformable_group,
+                                        grad_input_n.data_ptr<scalar_t>());
 
         // gradient w.r.t. weight, dWeight should accumulate across the batch and group
         modulated_deformable_im2col_cpu(input_n.data_ptr<scalar_t>(),
-                                         offset_n.data_ptr<scalar_t>(),
-                                         mask_n.data_ptr<scalar_t>(),
-                                         1, channels, height, width,
-                                         height_out, width_out, kernel_h, kernel_w,
-                                         pad_h, pad_w, stride_h, stride_w,
-                                         dilation_h, dilation_w, deformable_group,
-                                         columns.data_ptr<scalar_t>());
+                                        offset_n.data_ptr<scalar_t>(),
+                                        mask_n.data_ptr<scalar_t>(),
+                                        1, channels, height, width,
+                                        height_out, width_out, kernel_h, kernel_w,
+                                        pad_h, pad_w, stride_h, stride_w,
+                                        dilation_h, dilation_w, deformable_group,
+                                        columns.data_ptr<scalar_t>());
 
         long m_ = channels_out;
         long n_ = channels * kernel_h * kernel_w;
@@ -218,6 +218,5 @@ std::vector<at::Tensor> dcn_v2_cpu_backward(const at::Tensor &input,
     }
 
     return {
-        grad_input, grad_offset, grad_mask, grad_weight, grad_bias
-    };
+        grad_input, grad_offset, grad_mask, grad_weight, grad_bias};
 }

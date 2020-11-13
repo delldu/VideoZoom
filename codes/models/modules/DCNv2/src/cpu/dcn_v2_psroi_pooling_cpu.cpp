@@ -56,7 +56,7 @@ T bilinear_interp_cpu(
 }
 
 template <typename T>
- void DeformablePSROIPoolForwardKernelCpu(
+void DeformablePSROIPoolForwardKernelCpu(
     const int count,
     const T *bottom_data,
     const T spatial_scale,
@@ -75,7 +75,7 @@ template <typename T>
     T *top_data,
     T *top_count)
 {
-  for(int index = 0; index < count; index++)
+  for (int index = 0; index < count; index++)
   {
     // The output is in order (n, ctop, ph, pw)
     int pw = index % pooled_width;
@@ -168,7 +168,7 @@ void DeformablePSROIPoolBackwardAccKernelCpu(
     const int num_classes,
     const int channels_each_class)
 {
-  for(int index = 0; index < count; index++)
+  for (int index = 0; index < count; index++)
   {
     // The output is in order (n, ctop, ph, pw)
     int pw = index % pooled_width;
@@ -183,7 +183,7 @@ void DeformablePSROIPoolBackwardAccKernelCpu(
     T roi_start_h = static_cast<T>(round(offset_bottom_rois[2])) * spatial_scale - 0.5;
     T roi_end_w = static_cast<T>(round(offset_bottom_rois[3]) + 1.) * spatial_scale - 0.5;
     T roi_end_h = static_cast<T>(round(offset_bottom_rois[4]) + 1.) * spatial_scale - 0.5;
-    
+
     // Force too small ROIs to be 1x1
     T roi_width = std::max(roi_end_w - roi_start_w, T(0.1)); //avoid 0
     T roi_height = std::max(roi_end_h - roi_start_h, T(0.1));
@@ -247,11 +247,10 @@ void DeformablePSROIPoolBackwardAccKernelCpu(
         atomicAdd(offset_bottom_data_diff + bottom_index_base + y1 * width + x0, q01 * diff_val);
         atomicAdd(offset_bottom_data_diff + bottom_index_base + y0 * width + x1, q10 * diff_val);
         atomicAdd(offset_bottom_data_diff + bottom_index_base + y1 * width + x1, q11 * diff_val);*/
-       *(offset_bottom_data_diff + bottom_index_base + y0 * width + x0) += q00 * diff_val;
-       *(offset_bottom_data_diff + bottom_index_base + y1 * width + x0) += q01 * diff_val;
-       *(offset_bottom_data_diff + bottom_index_base + y0 * width + x1) += q10 * diff_val;
-       *(offset_bottom_data_diff + bottom_index_base + y1 * width + x1) += q11 * diff_val;
-
+        *(offset_bottom_data_diff + bottom_index_base + y0 * width + x0) += q00 * diff_val;
+        *(offset_bottom_data_diff + bottom_index_base + y1 * width + x0) += q01 * diff_val;
+        *(offset_bottom_data_diff + bottom_index_base + y0 * width + x1) += q10 * diff_val;
+        *(offset_bottom_data_diff + bottom_index_base + y1 * width + x1) += q11 * diff_val;
 
         if (no_trans)
         {
@@ -277,16 +276,16 @@ void DeformablePSROIPoolBackwardAccKernelCpu(
 
 std::tuple<at::Tensor, at::Tensor>
 dcn_v2_psroi_pooling_cpu_forward(const at::Tensor &input,
-                                  const at::Tensor &bbox,
-                                  const at::Tensor &trans,
-                                  const int no_trans,
-                                  const float spatial_scale,
-                                  const int output_dim,
-                                  const int group_size,
-                                  const int pooled_size,
-                                  const int part_size,
-                                  const int sample_per_part,
-                                  const float trans_std)
+                                 const at::Tensor &bbox,
+                                 const at::Tensor &trans,
+                                 const int no_trans,
+                                 const float spatial_scale,
+                                 const int output_dim,
+                                 const int group_size,
+                                 const int pooled_size,
+                                 const int part_size,
+                                 const int sample_per_part,
+                                 const float trans_std)
 {
   /*AT_ASSERTM(input.type().is_cuda(), "input must be a CUDA tensor");
   AT_ASSERTM(bbox.type().is_cuda(), "rois must be a CUDA tensor");
@@ -349,18 +348,18 @@ dcn_v2_psroi_pooling_cpu_forward(const at::Tensor &input,
 
 std::tuple<at::Tensor, at::Tensor>
 dcn_v2_psroi_pooling_cpu_backward(const at::Tensor &out_grad,
-                                   const at::Tensor &input,
-                                   const at::Tensor &bbox,
-                                   const at::Tensor &trans,
-                                   const at::Tensor &top_count,
-                                   const int no_trans,
-                                   const float spatial_scale,
-                                   const int output_dim,
-                                   const int group_size,
-                                   const int pooled_size,
-                                   const int part_size,
-                                   const int sample_per_part,
-                                   const float trans_std)
+                                  const at::Tensor &input,
+                                  const at::Tensor &bbox,
+                                  const at::Tensor &trans,
+                                  const at::Tensor &top_count,
+                                  const int no_trans,
+                                  const float spatial_scale,
+                                  const int output_dim,
+                                  const int group_size,
+                                  const int pooled_size,
+                                  const int part_size,
+                                  const int sample_per_part,
+                                  const float trans_std)
 {
   /*AT_ASSERTM(out_grad.type().is_cuda(), "out_grad must be a CUDA tensor");
   AT_ASSERTM(input.type().is_cuda(), "input must be a CUDA tensor");
