@@ -24,6 +24,7 @@ train_dataset_rootdir = "dataset/train/"
 test_dataset_rootdir = "dataset/test/"
 VIDEO_SEQUENCE_LENGTH = 3
 
+
 def get_transform(train=True):
     """Transform images."""
     ts = []
@@ -32,6 +33,26 @@ def get_transform(train=True):
 
     ts.append(T.ToTensor())
     return T.Compose(ts)
+
+
+def multiple_crop(data, multiple=32):
+    # Crop image to a multiple
+    H, W = data.shape[1:]
+    Hnew = int(H/multiple)*multiple
+    Wnew = int(W/multiple)*multiple
+    h = (H - Hnew)//2
+    w = (W - Wnew)//2
+    return data[:, h:h+Hnew, w:w+Wnew]
+
+
+def multiple_scale(data, multiple=32):
+    # Scale image to a multiple
+    C, H, W = data.shape
+    Hnew = int(multiple * math.ceil(H/multiple))
+    Wnew = int(multiple * math.ceil(W/multiple))
+    temp = data.new_zeros(C, Hnew, Wnew)
+    temp[:, 0:H, 0:W] = data
+    return temp
 
 
 class Video(data.Dataset):
@@ -44,11 +65,22 @@ class Video(data.Dataset):
         self.transforms = transforms
         self.root = ""
         self.images = []
+        self.height = 0
+        self.width = 0
 
     def reset(self, root):
         # print("Video Reset Root: ", root)
         self.root = root
         self.images = list(sorted(os.listdir(root)))
+        # Suppose the first image size is video frame size
+        if len(self.images) > 0: 
+            filename = os.path.join(self.root, self.images[0])
+            img = self.transforms(Image.open(filename).convert("RGB"))
+
+            # xxxx out of GPU memory !!!
+            C, H, W = img.size()
+            self.height = H//2
+            self.width = W//2
 
     def __getitem__(self, idx):
         """Load images."""
@@ -73,14 +105,9 @@ class Video(data.Dataset):
             img = self.transforms(img)
 
             # extend to 4 times
+            img = multiple_scale(img, 4)
             C, H, W = img.size()
-            HN = int(4*math.ceil(H/4))
-            WN = int(4*math.ceil(W/4))
-            img_temp = img.new_zeros(C, HN, WN)
-            img_temp[:, 0:H, 0:W] = img
-
-            C, H, W = img_temp.size()
-            sequence.append(img_temp.view(1, C, H, W))
+            sequence.append(img.view(1, C, H, W))
 
         return torch.cat(sequence, dim=0)
 

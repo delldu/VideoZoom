@@ -52,20 +52,26 @@ if __name__ == "__main__":
     video.reset(args.input)
     progress_bar = tqdm(total=len(video))
 
+    h = video.height
+    w = video.width
+    scale = 4
+
     count = 1
     for index in range(len(video)):
         progress_bar.update(1)
 
         # create input tensor, BxTxCxHxW
-        input_tensor = video[index][0:2].unsqueeze(0).to(device)
+        input_tensor = video[index][1:3].unsqueeze(0).to(device)
         with torch.no_grad():
             output_tensor = model(input_tensor).clamp(0, 1.0).squeeze()
-        # print(output_tensor.size())
+        # print(output_tensor.size()) TxCxHxW
 
         # Output result
+        output_tensor = output_tensor.cpu()
+        output_tensor = output_tensor[:, :, 0:scale*h, 0:scale*w]
+
         for k in range(2):
-            toimage(output_tensor[k].cpu()).save(
-                "{}/{:06d}.png".format(args.output, count))
+            toimage(output_tensor[k]).save("{}/{:06d}.png".format(args.output, count))
             count += 1
 
          # image = Image.open(filename).convert("RGB")
