@@ -2,7 +2,6 @@ import pdb
 
 import torch
 import torch.nn as nn
-from torch.autograd import Variable
 
 
 class ConvLSTMCell(nn.Module):
@@ -94,9 +93,6 @@ class ConvLSTMCell(nn.Module):
         else:
             return (torch.zeros(batch_size, self.hidden_dim, height, width),
                     torch.zeros(batch_size, self.hidden_dim, height, width))
-
-# xxxx 3333 forward
-
 
 class ConvLSTM(nn.Module):
 

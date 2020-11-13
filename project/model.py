@@ -19,6 +19,8 @@ import torch
 import torch.nn as nn
 from tqdm import tqdm
 
+from model_helper import VideoZoomModel
+
 from data import VIDEO_SEQUENCE_LENGTH
 
 
@@ -27,19 +29,6 @@ def PSNR(img1, img2):
     difference = (1.*img1-img2)**2
     mse = torch.sqrt(torch.mean(difference)) + 0.000001
     return 20*torch.log10(1./mse)
-
-
-class VideoZoomModel(nn.Module):
-    """VideoZoom Model."""
-
-    def __init__(self):
-        """Init model."""
-        super(VideoZoomModel, self).__init__()
-
-    def forward(self, x):
-        """Forward."""
-        return x
-
 
 def model_load(model, path):
     """Load model."""
@@ -108,7 +97,7 @@ def model_export():
 
 def get_model():
     """Create model."""
-    model = VideoZoomModel()
+    model = VideoZoomModel(64, VIDEO_SEQUENCE_LENGTH, 8, 5, 40)
     return model
 
 
@@ -265,16 +254,17 @@ def infer_perform():
     model = VideoZoomModel()
     model.eval()
     model = model.to(device)
+    print(model)
 
-    with tqdm(total=len(1000)) as t:
-        t.set_description(tag)
+    with tqdm(total=len(range(1000))) as t:
+        t.set_description("Model Inference Performance")
 
         # xxxx--modify here
-        input = torch.randn(64, 3, 512, 512)
-        input = input.to(device)
+        # input = torch.randn(64, 3, 512, 512)
+        # input = input.to(device)
 
-        with torch.no_grad():
-            output = model(input)
+        # with torch.no_grad():
+        #     output = model(input)
 
         t.update(1)
 
@@ -282,5 +272,5 @@ def infer_perform():
 if __name__ == '__main__':
     """Test model ..."""
 
-    model_export()
+    # model_export()
     infer_perform()

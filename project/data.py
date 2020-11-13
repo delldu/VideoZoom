@@ -11,18 +11,18 @@
 #
 
 import os
-
+import math
 import torch
 import torch.utils.data as data
 import torchvision.transforms as T
 import torchvision.utils as utils
 from PIL import Image
 
-# xxxx--modify here
+import pdb
+
 train_dataset_rootdir = "dataset/train/"
 test_dataset_rootdir = "dataset/test/"
-VIDEO_SEQUENCE_LENGTH = 5
-
+VIDEO_SEQUENCE_LENGTH = 3
 
 def get_transform(train=True):
     """Transform images."""
@@ -66,12 +66,23 @@ class Video(data.Dataset):
         sequence = []
         for filename in filelist:
             img = Image.open(filename).convert("RGB")
-            if self.transforms is not None:
-                img = self.transforms(img)
-            sequence.append(img)
-        if self.transforms is not None:
-            return torch.cat(sequence, dim=0)
-        return sequence
+
+            # xxxx out of GPU memory !!!
+            W, H = img.size
+            img = img.resize((W//2, H//2))
+            img = self.transforms(img)
+
+            # extend to 4 times
+            C, H, W = img.size()
+            HN = int(4*math.ceil(H/4))
+            WN = int(4*math.ceil(W/4))
+            img_temp = img.new_zeros(C, HN, WN)
+            img_temp[:, 0:H, 0:W] = img
+
+            C, H, W = img_temp.size()
+            sequence.append(img_temp.view(1, C, H, W))
+
+        return torch.cat(sequence, dim=0)
 
     def __len__(self):
         """Return total numbers of images."""
