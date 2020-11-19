@@ -1,12 +1,12 @@
-''' network architecture for Sakuya '''
 import functools
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.nn.init as init
-
 # PYTHONPATH=/data/VideoZoom/codes/models/modules
 from DCNv2.dcn_v2 import DCN_sep
+
 
 def initialize_weights(net_l, scale=1):
     if not isinstance(net_l, list):
@@ -145,6 +145,7 @@ class ConvLSTMCell(nn.Module):
         else:
             return (torch.zeros(batch_size, self.hidden_dim, height, width),
                     torch.zeros(batch_size, self.hidden_dim, height, width))
+
 
 class ConvLSTM(nn.Module):
 

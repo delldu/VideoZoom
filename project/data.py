@@ -10,15 +10,15 @@
 # ************************************************************************************/
 #
 
-import os
 import math
+import os
+import pdb
+
 import torch
 import torch.utils.data as data
 import torchvision.transforms as T
 import torchvision.utils as utils
 from PIL import Image
-
-import pdb
 
 train_dataset_rootdir = "dataset/train/"
 test_dataset_rootdir = "dataset/test/"
@@ -73,7 +73,7 @@ class Video(data.Dataset):
         self.root = root
         self.images = list(sorted(os.listdir(root)))
         # Suppose the first image size is video frame size
-        if len(self.images) > 0: 
+        if len(self.images) > 0:
             filename = os.path.join(self.root, self.images[0])
             img = self.transforms(Image.open(filename).convert("RGB"))
 

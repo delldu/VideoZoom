@@ -18,32 +18,28 @@ import torchvision.transforms as transforms
 from PIL import Image
 from tqdm import tqdm
 
-from model import get_model, model_load, model_setenv
 from data import Video
+from model import enable_amp, get_model, model_device, model_load
 
 if __name__ == "__main__":
     """Predict."""
 
-    model_setenv()
-
     parser = argparse.ArgumentParser()
     parser.add_argument('--checkpoint', type=str,
                         default="models/VideoZoom.pth", help="checkpint file")
-    parser.add_argument('--input', type=str, default="dataset/predict/input", help="input folder")
-    parser.add_argument('--output', type=str, default="dataset/predict/output", help="output folder")
+    parser.add_argument('--input', type=str,
+                        default="dataset/predict/input", help="input folder")
+    parser.add_argument('--output', type=str,
+                        default="dataset/predict/output", help="output folder")
     args = parser.parse_args()
-
-    # CPU or GPU ?
-    device = torch.device(os.environ["DEVICE"])
 
     model = get_model()
     model_load(model, args.checkpoint)
+    device = model_device()
     model.to(device)
     model.eval()
 
-    if os.environ["ENABLE_APEX"] == "YES":
-        from apex import amp
-        model = amp.initialize(model, opt_level="O1")
+    enable_amp(model)
 
     totensor = transforms.ToTensor()
     toimage = transforms.ToPILImage()
@@ -71,15 +67,6 @@ if __name__ == "__main__":
         output_tensor = output_tensor[:, :, 0:scale*h, 0:scale*w]
 
         for k in range(2):
-            toimage(output_tensor[k]).save("{}/{:06d}.png".format(args.output, count))
+            toimage(output_tensor[k]).save(
+                "{}/{:06d}.png".format(args.output, count))
             count += 1
-
-         # image = Image.open(filename).convert("RGB")
-         #  input_tensor = totensor(image).unsqueeze(0).to(device)
-
-         #   with torch.no_grad():
-         #        output_tensor = model(input_tensor).clamp(0, 1.0).squeeze()
-
-         #    # xxxx--modify here
-         #    toimage(output_tensor.cpu()).save(
-         #        "{}/{:06d}.png".format(args.output, index + 1))
