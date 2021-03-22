@@ -320,7 +320,7 @@ dcn_v2_psroi_pooling_cpu_forward(const at::Tensor &input,
   /*dim3 grid(std::min(THCCeilDiv(out_size, 512L), 4096L));
   dim3 block(512);*/
 
-  AT_DISPATCH_FLOATING_TYPES(input.type(), "dcn_v2_psroi_pooling_cpu_forward", [&] {
+  AT_DISPATCH_FLOATING_TYPES(input.scalar_type(), "dcn_v2_psroi_pooling_cpu_forward", [&] {
     DeformablePSROIPoolForwardKernelCpu<scalar_t>(
         out_size,
         input.contiguous().data_ptr<scalar_t>(),
@@ -394,7 +394,7 @@ dcn_v2_psroi_pooling_cpu_backward(const at::Tensor &out_grad,
   dim3 block(512);
   cudaStream_t stream = at::cuda::getCurrentCUDAStream();*/
 
-  AT_DISPATCH_FLOATING_TYPES(out_grad.type(), "dcn_v2_psroi_pooling_cpu_backward", [&] {
+  AT_DISPATCH_FLOATING_TYPES(out_grad.scalar_type(), "dcn_v2_psroi_pooling_cpu_backward", [&] {
     DeformablePSROIPoolBackwardAccKernelCpu<scalar_t>(
         out_size,
         out_grad.contiguous().data_ptr<scalar_t>(),
