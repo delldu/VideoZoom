@@ -2,7 +2,6 @@
 
 import glob
 import os
-import pdb
 
 import torch
 from setuptools import find_packages, setup
@@ -27,12 +26,13 @@ def get_extensions():
     if torch.cuda.is_available() and CUDA_HOME is not None:
         extension = CUDAExtension
         sources += source_cuda
-        define_macros += [("WITH_CUDA", True)]
+        define_macros += [("WITH_CUDA", None)]
         extra_compile_args["nvcc"] = [
             "-DCUDA_HAS_FP16=1",
             "-D__CUDA_NO_HALF_OPERATORS__",
             "-D__CUDA_NO_HALF_CONVERSIONS__",
             "-D__CUDA_NO_HALF2_OPERATORS__",
+            "-arch sm_75",
         ]
     else:
         #raise NotImplementedError('Cuda is not available')
@@ -55,7 +55,7 @@ def get_extensions():
 
 setup(
     name="DCNv2",
-    version="0.1",
+    version="0.2",
     author="charlesshang",
     url="https://github.com/charlesshang/DCNv2",
     description="deformable convolutional networks",
